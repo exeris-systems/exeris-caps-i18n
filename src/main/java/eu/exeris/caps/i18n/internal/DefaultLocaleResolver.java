@@ -89,6 +89,10 @@ public final class DefaultLocaleResolver implements LocaleResolver {
             return null;
         }
         String query = path.substring(q + 1);
+        int hash = query.indexOf('#');
+        if (hash >= 0) {
+            query = query.substring(0, hash);
+        }
         for (String pair : query.split("&")) {
             int eq = pair.indexOf('=');
             String key = eq > 0 ? pair.substring(0, eq) : pair;
@@ -156,11 +160,7 @@ public final class DefaultLocaleResolver implements LocaleResolver {
     private record WeightedLocale(Locale locale, double q) implements Comparable<WeightedLocale> {
         @Override
         public int compareTo(WeightedLocale o) {
-            int cmp = Double.compare(o.q, this.q);
-            if (cmp != 0) {
-                return cmp;
-            }
-            return this.locale.toLanguageTag().compareTo(o.locale.toLanguageTag());
+            return Double.compare(o.q, this.q);
         }
     }
 }

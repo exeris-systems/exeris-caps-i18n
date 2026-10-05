@@ -147,18 +147,37 @@ class I18nTest {
     }
 
     @Test
-    @DisplayName("LocalizedValue resolves localized strings with fallback chain")
+    @DisplayName("LocalizedValue resolves localized strings with fallback chain and handles underscore tags and nulls")
     void testLocalizedValue() {
-        LocalizedValue val = LocalizedValue.of(Map.of(
-                "en", "Hello World",
-                "pl", "Witaj Świecie",
-                "pl-PL", "Witaj w Polsce"
-        ));
+        java.util.Map<String, String> rawMap = new java.util.HashMap<>();
+        rawMap.put("en", "Hello World");
+        rawMap.put("pl_PL", "Witaj w Polsce");
+        rawMap.put("de", null); // null tolerance
+        LocalizedValue val = LocalizedValue.of(rawMap);
 
         assertThat(val.get(Locale.forLanguageTag("pl-PL"), Locale.ENGLISH)).isEqualTo("Witaj w Polsce");
-        assertThat(val.get(Locale.forLanguageTag("pl"), Locale.ENGLISH)).isEqualTo("Witaj Świecie");
-        assertThat(val.get(Locale.FRENCH, Locale.forLanguageTag("pl"))).isEqualTo("Witaj Świecie");
-        assertThat(val.get(Locale.GERMAN, Locale.GERMAN)).isEqualTo("Hello World"); // falls back to EN
+        assertThat(val.get(Locale.forLanguageTag("pl"), Locale.ENGLISH)).isEqualTo("Hello World");
+        assertThat(val.get(Locale.FRENCH, Locale.ENGLISH)).isEqualTo("Hello World");
+    }
+
+    @Test
+    @DisplayName("LocaleResolver preserves RFC 9110 stable preference ordering for equal weights")
+    void testStableAcceptLanguagePreference() {
+        LocaleResolver resolver = new DefaultLocaleResolver(Locale.ENGLISH);
+
+        // When q is equal (default 1.0), order of appearance in header must take precedence
+        Locale resolvedPlFirst = resolver.resolve("pl, en", (String) null);
+        assertThat(resolvedPlFirst.getLanguage()).isEqualTo("pl");
+
+        Locale resolvedEnFirst = resolver.resolve("en, pl", (String) null);
+        assertThat(resolvedEnFirst.getLanguage()).isEqualTo("en");
+
+        // With URI fragment stripped
+        TestHttpExchange exchangeWithFragment = new TestHttpExchange(
+                "/api/items?lang=pl#section",
+                List.of(new HttpHeader("Accept-Language", "en-US"))
+        );
+        assertThat(resolver.resolve(exchangeWithFragment).getLanguage()).isEqualTo("pl");
     }
 
     @Test

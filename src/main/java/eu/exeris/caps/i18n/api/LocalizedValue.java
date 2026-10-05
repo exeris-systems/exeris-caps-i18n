@@ -12,7 +12,15 @@ import java.util.Objects;
 public record LocalizedValue(Map<String, String> translations) {
 
     public LocalizedValue {
-        translations = translations != null ? Map.copyOf(translations) : Map.of();
+        java.util.LinkedHashMap<String, String> copy = new java.util.LinkedHashMap<>();
+        if (translations != null) {
+            for (var entry : translations.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    copy.put(entry.getKey().replace('_', '-').toLowerCase(Locale.ROOT), entry.getValue());
+                }
+            }
+        }
+        translations = java.util.Collections.unmodifiableMap(copy);
     }
 
     public static LocalizedValue of(Map<String, String> translations) {
@@ -65,27 +73,17 @@ public record LocalizedValue(Map<String, String> translations) {
     }
 
     private String findMatch(Locale locale) {
-        // 1. Exact language tag (e.g. "en-US", "pl-PL")
-        String tag = locale.toLanguageTag();
-        if (translations.containsKey(tag)) {
-            return translations.get(tag);
-        }
-        for (var entry : translations.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(tag)) {
-                return entry.getValue();
-            }
+        if (locale == null) return null;
+        // 1. Exact language tag (e.g. "en-us", "pl-pl")
+        String tag = locale.toLanguageTag().toLowerCase(Locale.ROOT);
+        String direct = translations.get(tag);
+        if (direct != null) {
+            return direct;
         }
         // 2. Language only (e.g. "en", "pl")
-        String lang = locale.getLanguage();
+        String lang = locale.getLanguage().toLowerCase(Locale.ROOT);
         if (!lang.isBlank()) {
-            if (translations.containsKey(lang)) {
-                return translations.get(lang);
-            }
-            for (var entry : translations.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase(lang)) {
-                    return entry.getValue();
-                }
-            }
+            return translations.get(lang);
         }
         return null;
     }
