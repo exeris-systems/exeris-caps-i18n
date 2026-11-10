@@ -22,8 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @CapabilityModule
 @CapabilityLifecycle
-@Provides(service = LocaleResolver.class, version = "1.0.0")
-@Provides(service = TranslationRegistry.class, version = "1.0.0")
+@Provides(service = LocaleResolver.class, version = "0.1.0")
+@Provides(service = TranslationRegistry.class, version = "0.1.0")
 public class I18nModule implements CapabilityLifecycleHooks {
 
     private final LocaleResolver localeResolver;

@@ -33,11 +33,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
 
-        <exeris.sdk.version>0.12.0</exeris.sdk.version>
-        <exeris.kernel.version>0.12.0</exeris.kernel.version>
-        <exeris.tooling.version>0.9.0-SNAPSHOT</exeris.tooling.version>
+        <exeris.sdk.version>0.13.3</exeris.sdk.version>
+        <exeris.kernel.version>0.13.1</exeris.kernel.version>
+        <!-- A release tag, not a SNAPSHOT: it resolves from Maven Central, so the build
+             needs no package-registry credential. -->
+        <exeris.tooling.version>0.11.0</exeris.tooling.version>
 
-        <junit.version>5.11.4</junit.version>
+        <junit.version>6.1.3</junit.version>
         <assertj.version>3.27.7</assertj.version>
     </properties>
 
@@ -49,10 +51,19 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- The lifecycle hook interface the module implements; unlike the annotations it is
+             read at runtime, so it is a compile-scope dependency. -->
         <dependency>
-            <groupId>eu.exeris.caps</groupId>
-            <artifactId>exeris-caps-service-boundary-core</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <groupId>eu.exeris</groupId>
+            <artifactId>exeris-sdk-composition-lifecycle</artifactId>
+            <version>${exeris.sdk.version}</version>
+        </dependency>
+
+        <!-- Public kernel SPI only: the HTTP exchange types the locale resolver reads. -->
+        <dependency>
+            <groupId>eu.exeris</groupId>
+            <artifactId>exeris-kernel-spi</artifactId>
+            <version>${exeris.kernel.version}</version>
         </dependency>
 
         <dependency>
@@ -79,7 +90,7 @@
                     <release>${maven.compiler.release}</release>
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>eu.exeris.tooling</groupId>
+                            <groupId>eu.exeris</groupId>
                             <artifactId>exeris-processor</artifactId>
                             <version>${exeris.tooling.version}</version>
                         </path>
@@ -88,12 +99,14 @@
             </plugin>
 
             <plugin>
-                <groupId>eu.exeris.tooling</groupId>
+                <groupId>eu.exeris</groupId>
                 <artifactId>exeris-codegen-maven-plugin</artifactId>
                 <version>${exeris.tooling.version}</version>
                 <executions>
+                    <!-- Both goals: a graph failure at generate-sources degrades to a warning
+                         only when a bound verify-capabilities execution follows, and the
+                         authoritative verdict then comes from metadata emitted by this build. -->
                     <execution>
-                        <phase>process-classes</phase>
                         <goals>
                             <goal>generate</goal>
                             <goal>verify-capabilities</goal>
@@ -105,7 +118,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.6</version>
+                <version>3.6.0</version>
             </plugin>
         </plugins>
     </build>
