@@ -49,19 +49,18 @@ Freezing the SPI too early would make subsequent integration expensive.
 
 ## 0.1.0 — import & repository hygiene
 
-> **Current status:** `main` carries the organisation shell only. The capability code arrives in one
-> import pull request, built on kernel 0.13.1, `exeris-sdk` 0.13.3 and `exeris-tooling` 0.11.0.
-> Closing 0.1.0 requires that import and a green CI.
+> **Current status:** the capability code is imported and builds on kernel 0.13.1, `exeris-sdk` 0.13.3
+> and `exeris-tooling` 0.11.0. Closing 0.1.0 requires a green CI on JDK 25 and 26.
 
 ### Delivered by the import
-- [ ] `@CapabilityModule` + `@CapabilityLifecycle` + `@Provides(service = LocaleResolver.class, version = "0.1.0")` + `@Provides(service = TranslationRegistry.class, version = "0.1.0")`.
-- [ ] Package root `eu.exeris.caps.i18n` with strict `api` / `internal` split.
-- [ ] Clean **JDK 25 LTS** baseline: **strictly preview-clean** (no `--enable-preview` per CAG §5).
-- [ ] Initial `LocaleResolver` adhering to RFC 9110 §12.5.4 (`Accept-Language` parsing with `q`-weighting and query param precedence).
-- [ ] Thread-safe in-memory `DefaultTranslationRegistry` and immutable `LocalizedValue` record carrier.
-- [ ] Two-pass codegen build wired (`generate` + `verify-capabilities` in `exeris-codegen-maven-plugin`).
-- [ ] `cap-manifest.json` committed with `validated: true` and a SHA-256 `contentBinding`.
-- [ ] Unit tests with JUnit 5 + AssertJ; zero external logging or runtime dependencies.
+- [x] `@CapabilityModule` + `@CapabilityLifecycle` + `@Provides(service = LocaleResolver.class, version = "0.1.0")` + `@Provides(service = TranslationRegistry.class, version = "0.1.0")`.
+- [x] Package root `eu.exeris.caps.i18n` with strict `api` / `internal` split.
+- [x] Clean **JDK 25 LTS** baseline: **strictly preview-clean** (no `--enable-preview` per CAG §5).
+- [x] Initial `LocaleResolver` adhering to RFC 9110 §12.5.4 (`Accept-Language` parsing with `q`-weighting and query param precedence).
+- [x] Thread-safe in-memory `DefaultTranslationRegistry` and immutable `LocalizedValue` record carrier.
+- [x] Two-pass codegen build wired (`generate` + `verify-capabilities` in `exeris-codegen-maven-plugin`).
+- [x] `cap-manifest.json` committed with `validated: true` and a SHA-256 `contentBinding`.
+- [x] Unit tests with JUnit 5 + AssertJ; zero external logging or runtime dependencies.
 
 ### Tasks to close 0.1.0 (Repository Hygiene & Guardrails)
 - [x] **`AGENTS.md` and `CLAUDE.md`** — Documenting repository invariants:
@@ -71,12 +70,12 @@ Freezing the SPI too early would make subsequent integration expensive.
 - [x] **`README.md`** — High-level architecture, service contract, API usage examples (`LocaleResolver`, `TranslationRegistry`, `LocalizedValue`), and licensing statement.
 - [x] **`SECURITY.md` & `CONTRIBUTING.md`** — Vulnerability disclosure policy for public Apache-2.0 repo, header parsing DoS protection guidelines, and PR conventions.
 - [x] **ADR link stubs** — `docs/adr/ADR-024.link.md` (composition model), `docs/adr/ADR-053.link.md` (manifest format) and `docs/adr/ADR-055.link.md` (Wall guard).
-- [ ] **`.github/workflows/build.yml`** — Multi-JDK CI (JDK 25 & 26), credential-free build per CAG §5:
-  - Clean local repo: `-Dmaven.repo.local=.m2/repository`.
+- [x] **`.github/workflows/build.yml`** — Multi-JDK CI (JDK 25 & 26), credential-free build per CAG §5:
   - Resolve kernel 0.13.1, `exeris-sdk` 0.13.3 and `exeris-tooling` 0.11.0 as released artefacts; no upstream is built from source.
   - Verification pass running `mvn verify` enforcing Cap-Tier Wall and manifest checks.
+  - Assertion that the committed generated tree matches what the build regenerated.
 
-**Exit gate for 0.1.0:** Hygiene files committed, CI green on JDK 25/26 without credentials, two-pass build cleanly passing on clean `-Dmaven.repo.local`.
+**Exit gate for 0.1.0:** Hygiene files committed; `build.yml` green on JDK 25 and 26 on a clean runner with no credentials, running the two-pass build, the manifest assertions (emitted, `validated: true`, SHA-256 binding, module present) and the check that the committed `src/main/generated/` tree is unchanged.
 
 ---
 

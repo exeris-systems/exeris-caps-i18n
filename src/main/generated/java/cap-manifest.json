@@ -1,0 +1,34 @@
+{
+  "schemaVersion" : 2,
+  "stamp" : {
+    "validated" : true,
+    "compositionVersion" : "0.0.0",
+    "contentBinding" : "sha256:296ec9bef46f0162babec852821bafbd8a0929f9647e51d9527a984bf66d54f3"
+  },
+  "modules" : [
+    {
+      "name" : "I18nModule",
+      "packageName" : "eu.exeris.caps.i18n",
+      "qualifiedName" : "eu.exeris.caps.i18n.I18nModule",
+      "module" : {
+        "provides" : [
+          {
+            "service" : "eu.exeris.caps.i18n.api.LocaleResolver",
+            "version" : "0.1.0"
+          },
+          {
+            "service" : "eu.exeris.caps.i18n.api.TranslationRegistry",
+            "version" : "0.1.0"
+          }
+        ],
+        "requires" : [ ],
+        "lifecycleOwner" : "eu.exeris.caps.i18n.I18nModule"
+      }
+    }
+  ],
+  "resolutions" : [ ],
+  "initOrder" : [
+    "eu.exeris.caps.i18n.I18nModule"
+  ],
+  "warnings" : [ ]
+}

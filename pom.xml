@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>eu.exeris.caps</groupId>
+    <artifactId>exeris-caps-i18n</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Exeris Caps :: Internationalization (i18n)</name>
+    <description>
+        Layer 4 Platform Capability providing LocaleResolver, TranslationRegistry,
+        and LocalizedValue multi-lingual engine for Exeris Service Boundary and SKUs.
+    </description>
+    <url>https://github.com/exeris-systems/exeris-caps-i18n</url>
+    <inceptionYear>2026</inceptionYear>
+
+    <organization>
+        <name>Exeris Systems</name>
+        <url>https://exeris.eu</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
+
+        <exeris.sdk.version>0.13.3</exeris.sdk.version>
+        <exeris.kernel.version>0.13.1</exeris.kernel.version>
+        <!-- A release tag, not a SNAPSHOT: it resolves from Maven Central, so the build
+             needs no package-registry credential. -->
+        <exeris.tooling.version>0.11.0</exeris.tooling.version>
+
+        <junit.version>6.1.3</junit.version>
+        <assertj.version>3.27.7</assertj.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>eu.exeris</groupId>
+            <artifactId>exeris-sdk-annotations</artifactId>
+            <version>${exeris.sdk.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- The lifecycle hook interface the module implements; unlike the annotations it is
+             read at runtime, so it is a compile-scope dependency. -->
+        <dependency>
+            <groupId>eu.exeris</groupId>
+            <artifactId>exeris-sdk-composition-lifecycle</artifactId>
+            <version>${exeris.sdk.version}</version>
+        </dependency>
+
+        <!-- Public kernel SPI only: the HTTP exchange types the locale resolver reads. -->
+        <dependency>
+            <groupId>eu.exeris</groupId>
+            <artifactId>exeris-kernel-spi</artifactId>
+            <version>${exeris.kernel.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.16.0</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>eu.exeris</groupId>
+                            <artifactId>exeris-processor</artifactId>
+                            <version>${exeris.tooling.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>eu.exeris</groupId>
+                <artifactId>exeris-codegen-maven-plugin</artifactId>
+                <version>${exeris.tooling.version}</version>
+                <executions>
+                    <!-- Both goals: a graph failure at generate-sources degrades to a warning
+                         only when a bound verify-capabilities execution follows, and the
+                         authoritative verdict then comes from metadata emitted by this build. -->
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                            <goal>verify-capabilities</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.6.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

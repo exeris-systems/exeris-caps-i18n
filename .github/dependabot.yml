@@ -1,12 +1,15 @@
 version: 2
 
-# GITHUB ACTIONS. Actions are pinned by commit SHA (OpenSSF Scorecard "Pinned-Dependencies"), which
-# makes them immune to a moved tag but also invisible to a human reading the file. Dependabot
-# rewrites the SHA and the trailing `# vX.Y.Z` comment together, so the pin stays current without
-# anyone auditing refs by hand.
+# GITHUB ACTIONS. `claude.yml` pins its actions by commit SHA with a trailing `# vX.Y.Z` comment,
+# which Dependabot rewrites together with the SHA. `build.yml` references its actions by version
+# tag, which Dependabot bumps as tags. The reusable workflows in `guardrails.yml` follow the
+# organisation's `main`.
 #
-# The Maven ecosystem is configured together with the POM, because a Maven entry without a
-# `pom.xml` is an error in every Dependabot run.
+# MAVEN. The module's whole gate is `mvn verify` on JDK 25 and 26 plus the manifest assertion, and
+# every pull request runs exactly that, so a dependency bump is checked by what checks a
+# hand-written change. The `eu.exeris:*` pins are ignored: the SDK, kernel and codegen chain are one
+# coordinated set that moves by a deliberate change to the POM, and a bot bump of one alone would
+# propose a combination nobody validated.
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -26,6 +29,28 @@ updates:
         patterns:
           - "actions/*"
           - "github/*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps)"
+    labels:
+      - dependencies
+    ignore:
+      - dependency-name: "eu.exeris:*"
+    groups:
+      # Minors and patches only, so a major version travels in a pull request of its own.
+      test-dependencies:
+        patterns:
+          - "org.junit.jupiter:*"
+          - "org.assertj:*"
         update-types:
           - minor
           - patch

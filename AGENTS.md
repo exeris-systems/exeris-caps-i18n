@@ -17,8 +17,6 @@ Operating contract for AI agents working in this repository.
 (`LocaleResolver`), a translation registry (`TranslationRegistry`) and an immutable localized-value
 carrier (`LocalizedValue`). Licence: Apache-2.0, one of the four `community` caps under ADR-023.
 
-- **The capability code has not landed in this repository yet.** `main` carries the organisation shell;
-  the code arrives in one import pull request. Do not assume a `pom.xml` or `src/` exists.
 - **The jar has no third-party runtime dependency.** Every Exeris annotation is `@Retention(SOURCE)`:
   `exeris-sdk-annotations` stays at `provided` scope and `exeris-processor` stays in
   `annotationProcessorPaths`, never on the compile classpath.
