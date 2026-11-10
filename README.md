@@ -4,7 +4,7 @@ Locale resolution, a translation registry and localized values as an Exeris capa
 
 **Licence:** Apache-2.0 — one of the four `community` caps under [ADR-023](https://github.com/exeris-systems/exeris-docs/blob/main/adr/ADR-023-capability-licensing-taxonomy.md). Free for any use, production included, with no subscription.
 
-This repository holds the organisation shell only; the capability code has not landed yet. [`ROADMAP.md`](ROADMAP.md) sequences the work.
+**Status:** proof of concept. Both services are provided at contract version `0.1.0`, and no artefact is published yet. [`ROADMAP.md`](ROADMAP.md) sequences the work.
 
 ---
 
@@ -23,6 +23,15 @@ The primary consumers are SKUs that carry multi-lingual attributes: PIM and Head
 - **It writes no response header.** It inspects requests; applying `Content-Language` stays with the Service Boundary response pipeline.
 - **It carries no ICU4J or CLDR dependency.** The cap stays zero third-party dependency; advanced plural rules belong to a dedicated extension.
 - **It binds to no host runtime.** No Spring, Netty or Jakarta Servlet type, enforced by the cap-tier Wall.
+
+## What it provides
+
+| Service | Contract |
+|---|---|
+| `eu.exeris.caps.i18n.api.LocaleResolver` | `0.1.0` |
+| `eu.exeris.caps.i18n.api.TranslationRegistry` | `0.1.0` |
+
+`LocalizedValue` is a value type in the same `api` package. The capability declares no `@Requires` and, being `community`, registers no entitlement.
 
 ## Layout
 
@@ -45,7 +54,7 @@ mvn compile -Dexeris.codegen.skip=true   # seed: the processor writes capability
 mvn verify                               # generate, validate the graph, scan the Wall
 ```
 
-A successful build produces `cap-manifest.json`, carrying a validated stamp and a SHA-256 content binding over the resolved cap set.
+A successful build produces `src/main/generated/java/cap-manifest.json`, carrying a validated stamp and a SHA-256 content binding over the resolved cap set. The file is committed; `git status` is clean after `mvn verify`.
 
 ## Reference
 
