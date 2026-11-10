@@ -14,10 +14,22 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * Thread-safe, cached implementation of {@link LocaleResolver} adhering to RFC 9110 §12.5.4.
+ *
+ * <p><b>Header cache.</b> Parsed {@code Accept-Language} values are cached by their raw text, up to
+ * {@code MAX_CACHE_SIZE} (1024) entries. A header is parsed on the calling thread, outside the map, and
+ * inserted with {@code putIfAbsent} only while the cache is under its bound; a full cache stops
+ * admitting new entries and is never cleared, so a header first seen while it is full is parsed on
+ * every call. The bound is approximate: the size check and the insert are not atomic, so the cache
+ * may exceed it by at most the number of concurrent callers. Cached values are immutable lists.
+ * The request path never runs a callback inside the map and never takes more than one bin lock.
+ *
+ * <p><b>Quality values.</b> A range's {@code q} must match the RFC 9110 §12.4.2 grammar: {@code 0}
+ * to {@code 1} with at most three decimals. A range whose {@code q} is malformed or outside that
+ * range is dropped, as is a range with {@code q=0} ("not acceptable").
  */
 public final class DefaultLocaleResolver implements LocaleResolver {
 
-    private static final int MAX_CACHE_SIZE = 1024;
+    static final int MAX_CACHE_SIZE = 1024;
     private final Locale defaultLocale;
     private final ConcurrentMap<String, List<WeightedLocale>> headerCache = new ConcurrentHashMap<>();
 
@@ -53,7 +65,13 @@ public final class DefaultLocaleResolver implements LocaleResolver {
 
         // 2. Parse Accept-Language header per RFC 9110 with q-weighting
         if (acceptLanguageHeader != null && !acceptLanguageHeader.isBlank()) {
-            List<WeightedLocale> weighted = headerCache.computeIfAbsent(acceptLanguageHeader, this::parseAcceptLanguage);
+            List<WeightedLocale> weighted = headerCache.get(acceptLanguageHeader);
+            if (weighted == null) {
+                weighted = parseAcceptLanguage(acceptLanguageHeader);
+                if (headerCache.size() < MAX_CACHE_SIZE) {
+                    headerCache.putIfAbsent(acceptLanguageHeader, weighted);
+                }
+            }
             if (!weighted.isEmpty()) {
                 return weighted.get(0).locale();
             }
@@ -115,11 +133,12 @@ public final class DefaultLocaleResolver implements LocaleResolver {
         return locale;
     }
 
-    private List<WeightedLocale> parseAcceptLanguage(String header) {
-        if (headerCache.size() > MAX_CACHE_SIZE) {
-            headerCache.clear();
-        }
+    /** Number of cached headers; exposed for tests of the cache bound. */
+    int cachedHeaderCount() {
+        return headerCache.size();
+    }
 
+    private List<WeightedLocale> parseAcceptLanguage(String header) {
         List<WeightedLocale> list = new ArrayList<>();
         String[] parts = header.split(",");
         for (String part : parts) {
@@ -133,22 +152,22 @@ public final class DefaultLocaleResolver implements LocaleResolver {
                 continue;
             }
 
-            double q = 1.0;
+            int millis = 1000;
+            boolean malformed = false;
             for (int i = 1; i < params.length; i++) {
                 String param = params[i].trim();
                 if (param.startsWith("q=") || param.startsWith("Q=")) {
-                    try {
-                        q = Double.parseDouble(param.substring(2).trim());
-                    } catch (NumberFormatException ignored) {
-                        q = 1.0;
+                    millis = parseQuality(param.substring(2).trim());
+                    if (millis < 0) {
+                        malformed = true;
                     }
                 }
             }
 
-            if (q > 0.0) {
+            if (!malformed && millis > 0) {
                 Locale loc = parseLocaleTag(range);
                 if (loc != null) {
-                    list.add(new WeightedLocale(loc, q));
+                    list.add(new WeightedLocale(loc, millis));
                 }
             }
         }
@@ -157,10 +176,47 @@ public final class DefaultLocaleResolver implements LocaleResolver {
         return List.copyOf(list);
     }
 
-    private record WeightedLocale(Locale locale, double q) implements Comparable<WeightedLocale> {
+    /**
+     * Parses an RFC 9110 §12.4.2 qvalue ({@code "0" ["." 0*3DIGIT]} or {@code "1" ["." 0*3("0")]}).
+     *
+     * @return the weight in thousandths (0 to 1000), or -1 when the text is not a valid qvalue
+     */
+    private static int parseQuality(String text) {
+        int n = text.length();
+        if (n == 0 || n > 5) {
+            return -1;
+        }
+        char lead = text.charAt(0);
+        if (lead != '0' && lead != '1') {
+            return -1;
+        }
+        if (n == 1) {
+            return lead == '1' ? 1000 : 0;
+        }
+        if (text.charAt(1) != '.') {
+            return -1;
+        }
+        int fraction = 0;
+        int scale = 100;
+        for (int i = 2; i < n; i++) {
+            char c = text.charAt(i);
+            if (c < '0' || c > '9') {
+                return -1;
+            }
+            fraction += (c - '0') * scale;
+            scale /= 10;
+        }
+        if (lead == '1') {
+            return fraction == 0 ? 1000 : -1;
+        }
+        return fraction;
+    }
+
+    /** A language range with its weight in thousandths; sorts by descending weight. */
+    private record WeightedLocale(Locale locale, int millis) implements Comparable<WeightedLocale> {
         @Override
         public int compareTo(WeightedLocale o) {
-            return Double.compare(o.q, this.q);
+            return Integer.compare(o.millis, this.millis);
         }
     }
 }
