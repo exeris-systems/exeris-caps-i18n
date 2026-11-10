@@ -1,0 +1,31 @@
+version: 2
+
+# GITHUB ACTIONS. Actions are pinned by commit SHA (OpenSSF Scorecard "Pinned-Dependencies"), which
+# makes them immune to a moved tag but also invisible to a human reading the file. Dependabot
+# rewrites the SHA and the trailing `# vX.Y.Z` comment together, so the pin stays current without
+# anyone auditing refs by hand.
+#
+# The Maven ecosystem is configured together with the POM, because a Maven entry without a
+# `pom.xml` is an error in every Dependabot run.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(actions)"
+    labels:
+      - dependencies
+    groups:
+      # One PR for the routine github-owned bumps rather than several, minors and patches only so
+      # that a major version travels in a pull request of its own. Third-party actions stay
+      # ungrouped: those are the ones worth reading a changelog for before merging.
+      github-owned:
+        patterns:
+          - "actions/*"
+          - "github/*"
+        update-types:
+          - minor
+          - patch
