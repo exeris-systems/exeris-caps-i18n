@@ -75,7 +75,7 @@ Freezing the SPI too early would make subsequent integration expensive.
   - Verification pass running `mvn verify` enforcing Cap-Tier Wall and manifest checks.
   - Assertion that the committed generated tree matches what the build regenerated.
 
-**Exit gate for 0.1.0:** Hygiene files committed, CI green on JDK 25/26 without credentials, two-pass build cleanly passing on clean `-Dmaven.repo.local`.
+**Exit gate for 0.1.0:** Hygiene files committed; `build.yml` green on JDK 25 and 26 on a clean runner with no credentials, running the two-pass build, the manifest assertions (emitted, `validated: true`, SHA-256 binding, module present) and the check that the committed `src/main/generated/` tree is unchanged.
 
 ---
 

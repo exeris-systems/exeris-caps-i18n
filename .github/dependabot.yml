@@ -1,9 +1,9 @@
 version: 2
 
-# GITHUB ACTIONS. Actions are pinned by commit SHA (OpenSSF Scorecard "Pinned-Dependencies"), which
-# makes them immune to a moved tag but also invisible to a human reading the file. Dependabot
-# rewrites the SHA and the trailing `# vX.Y.Z` comment together, so the pin stays current without
-# anyone auditing refs by hand.
+# GITHUB ACTIONS. `claude.yml` pins its actions by commit SHA with a trailing `# vX.Y.Z` comment,
+# which Dependabot rewrites together with the SHA. `build.yml` references its actions by version
+# tag, which Dependabot bumps as tags. The reusable workflows in `guardrails.yml` follow the
+# organisation's `main`.
 #
 # MAVEN. The module's whole gate is `mvn verify` on JDK 25 and 26 plus the manifest assertion, and
 # every pull request runs exactly that, so a dependency bump is checked by what checks a

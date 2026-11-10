@@ -40,8 +40,12 @@ public record LocalizedValue(Map<String, String> translations) {
     }
 
     /**
-     * Retrieves the localized string matching the requested locale, falling back
-     * to fallback locale, then any available translation, or {@code null}.
+     * Retrieves the localized string for the first of these that matches: the requested locale, the
+     * fallback locale, English ({@code en}), then the first translation in insertion order; returns
+     * {@code null} only when there are no translations.
+     *
+     * <p>A locale matches on its exact lower-cased language tag (for example {@code pl-pl}), then on
+     * its language alone (for example {@code pl}). A {@code null} requested or fallback locale is skipped.
      *
      * @param requested primary desired locale
      * @param fallback  secondary fallback locale

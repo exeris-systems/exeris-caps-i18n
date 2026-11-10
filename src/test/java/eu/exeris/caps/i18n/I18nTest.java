@@ -161,6 +161,31 @@ class I18nTest {
     }
 
     @Test
+    @DisplayName("LocalizedValue.get tries requested, fallback, English, then the first entry in insertion order")
+    void testLocalizedValueLookupOrder() {
+        java.util.Map<String, String> withEnglish = new java.util.LinkedHashMap<>();
+        withEnglish.put("pl", "pl-text");
+        withEnglish.put("en", "en-text");
+        withEnglish.put("de", "de-text");
+        LocalizedValue a = LocalizedValue.of(withEnglish);
+
+        // requested wins over fallback and English
+        assertThat(a.get(Locale.GERMAN, Locale.forLanguageTag("pl"))).isEqualTo("de-text");
+        // fallback wins over English and the first entry
+        assertThat(a.get(Locale.FRENCH, Locale.GERMAN)).isEqualTo("de-text");
+        // neither matches: English wins over the first entry (pl)
+        assertThat(a.get(Locale.FRENCH, Locale.ITALIAN)).isEqualTo("en-text");
+        assertThat(a.get(null, null)).isEqualTo("en-text");
+
+        java.util.Map<String, String> noEnglish = new java.util.LinkedHashMap<>();
+        noEnglish.put("pl", "pl-text");
+        noEnglish.put("de", "de-text");
+        // no English: the first entry in insertion order
+        assertThat(LocalizedValue.of(noEnglish).get(Locale.FRENCH, Locale.ITALIAN)).isEqualTo("pl-text");
+        assertThat(LocalizedValue.of(java.util.Map.of()).get(Locale.FRENCH, Locale.ITALIAN)).isNull();
+    }
+
+    @Test
     @DisplayName("LocaleResolver preserves RFC 9110 stable preference ordering for equal weights")
     void testStableAcceptLanguagePreference() {
         LocaleResolver resolver = new DefaultLocaleResolver(Locale.ENGLISH);
